@@ -246,7 +246,7 @@ int EQ3CurrentSingleSlot = 0;
 
 uint8_t EQ3TopicStyle = 1;
 uint8_t EQ3HideFailedPoll = 1;
-int8_t trvMinRSSI = -99;
+int8_t trvMinRSSI = -110;  // 17.10.2023 Moch: Has been -99
 
 // control of timing of sending polling.
 // we leave an interval between polls to allow scans to take place
@@ -305,12 +305,46 @@ char *topicPrefix(int prefix, const uint8_t *addr, int useAlias){
 // return 0+ if we find the addr has one of our listed prefixes
 // return -1 if we don't recognise the mac
 int matchPrefix(const uint8_t *addr){
-  for (int i = 0; i < sizeof(macprefixes)/sizeof(*macprefixes); i++){
-    if (!memcmp(addr, macprefixes[i], 3)){
-      return i;
+  // for (int i = 0; i < sizeof(macprefixes)/sizeof(*macprefixes); i++){
+  //   if (!memcmp(addr, macprefixes[i], 3)){
+  //     return i;
+  //   }
+  // }
+  // return -1;
+
+  // 17.10.2023 Moch: Check for the defined TRV MAC's
+  int result = -1;
+  #ifdef RADIATOR_1
+    if (result == -1 && !memcmp(addr, RADIATOR_1, 6)) {
+      result = 0;
     }
-  }
-  return -1;
+  #endif
+  #ifdef RADIATOR_2
+    if (result == -1 && !memcmp(addr, RADIATOR_2, 6)) {
+      result = 0;
+    }
+  #endif
+  #ifdef RADIATOR_3
+    if (result == -1 && !memcmp(addr, RADIATOR_3, 6)) {
+      result = 0;
+    }
+  #endif
+  #ifdef RADIATOR_4
+    if (result == -1 && !memcmp(addr, RADIATOR_4, 6)) {
+      result = 0;
+    }
+  #endif
+  #ifdef RADIATOR_5
+    if (result == -1 && !memcmp(addr, RADIATOR_5, 6)) {
+      result = 0;
+    }
+  #endif
+  #ifdef RADIATOR_6
+    if (result == -1 && !memcmp(addr, RADIATOR_6, 6)) {
+      result = 0;
+    }
+  #endif
+  return result;
 }
 
 
@@ -825,20 +859,22 @@ int TaskEQ3advertismentCallback(BLE_ESP32::ble_advertisment_t *pStruct)
   }
   if (!alias) alias = "";
 
-  for (int i = 0; i < sizeof(EQ3Names)/sizeof(*EQ3Names); i++){
-    if (!strcmp(nameStr, EQ3Names[i])){
-      found = true;
-      break;
-    }
-  }
+  // 17.10.2023 Moch: Commented since we want to check MAC only
+  // for (int i = 0; i < sizeof(EQ3Names)/sizeof(*EQ3Names); i++){
+  //   if (!strcmp(nameStr, EQ3Names[i])){
+  //     found = true;
+  //     break;
+  //   }
+  // }
 
-  if (!found && !strncmp(alias, "EQ3", 3)){
-    found = true;
-  }
+  // if (!found && !strncmp(alias, "EQ3", 3)){
+  //   found = true;
+  // }
 
   // if the addr matches the EQ2 mfg prefix, add it?
   if (!found && EQ3MatchPrefix && (matchPrefix(addr) >= 0)){
     found = true;
+    //AddLog(LOG_LEVEL_ERROR, PSTR("! ! ! ! EQ3: Added %s. ! ! ! !"), addrStr(addr));
   }
 
   if (!found) return 0;
